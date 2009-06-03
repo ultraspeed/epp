@@ -1,4 +1,4 @@
-= EPP Version 1.0
+= EPP Version 1.0.1
 
 The EPP gem provides basic functionality for connecting and making requests on EPP (Extensible Provisioning Protocol) servers. Currently, major providers Centralnic and Nominet have been tested.
 
@@ -62,6 +62,10 @@ You would then make an XML request to the server. You can build this however you
     response = server.request(xml)
     
 The EPP server would then return the XML response as a string, and set it equal to <tt>response</tt> for your usage.
+
+You can close the connection to the server completely by using the following:
+
+    server.close_connection
 
 == Bugs/Issues
 

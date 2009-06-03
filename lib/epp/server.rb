@@ -5,8 +5,8 @@ module Epp #:nodoc:
     def initialize(attributes = {})
       requires!(attributes, :server, :port)
 
-      @connection = open_connection(attributes[:server], attributes[:port])
-      @socket     = open_socket(@connection)
+      @connection = TCPSocket.new(attributes[:server], attributes[:port])
+      @socket     = OpenSSL::SSL::SSLSocket.new(@connection)
       
       # Initiate the connection to the server through the SSL socket
       @socket.connect
@@ -21,18 +21,6 @@ module Epp #:nodoc:
       send_frame(xml)
       get_frame
     end
-
-    private
-    
-    # Opens a connection to the EPP server.
-    def open_connection(server, port)
-      TCPSocket.new(server, port)
-    end
-    
-    # Opens an SSL socket with the EPP server.
-    def open_socket(connection)
-      OpenSSL::SSL::SSLSocket.new(connection)
-    end
     
     # Closes the connection to the EPP server. It should be noted
     # that the EPP specification indicates that clients should send
@@ -42,6 +30,8 @@ module Epp #:nodoc:
       @socket.close if defined?(@socket) && !@socket.closed?
       @connection.close if defined?(@connection) && !@connection.closed?
     end
+    
+    private
     
     # Receive an EPP frame from the server. Since the connection is blocking,
     # this method will wait until the connection becomes available for use. If
