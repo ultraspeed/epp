@@ -1,14 +1,82 @@
 = EPP Version 1.0
 
-http://github.com/ultraspeed/epp
+The EPP gem provides basic functionality for connecting and making requests on EPP (Extensible Provisioning Protocol) servers. Currently, major providers Centralnic and Nominet have been tested.
 
-== DESCRIPTION:
+* {Nominet Standard EPP Documentation}[http://www.nominet.org.uk/registrars/systems/standardepp/]
+* {Centralnic Labs EPP Documentation}[http://labs.centralnic.com/epp/]
 
-Basic functionality for connecting and making requests on EPP (Extensible Provisioning Protocol) servers.
+== Installation
 
-== LICENSE:
+You can install this gem with:
 
-(The MIT License)
+    $ sudo gem sources -a http://gems.github.com
+    $ sudo gem install ultraspeed-epp
+    
+Then, you can require it in your Ruby app:
+
+    require "epp"
+    
+If you're using Rails, add the following line to your Rails <tt>config/environment.rb</tt>:
+
+    config.gem "ultraspeed-epp", :lib => "epp", :source => "http://gems.github.com"
+    
+Once you do that, you can install the gem by typing <tt>sudo rake gems:install</tt>.
+
+== Example Usage
+
+First, you must initialize an Epp::Server object to use. This requires the server address and port:
+
+    server = Epp::Server.new(
+      :server => "testbed-epp.nominet.org.uk",
+      :port => 700
+    )
+    
+If no port is specified, it will be assumed that you will be using port 700.
+
+You would then make an XML request to the server. You can build this however you'd like. For simplicity purposes, here is a string <tt><login></tt> request:
+
+    xml = %{
+    <?xml version="1.0" encoding="UTF-8"?>
+    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+      <command>
+        <login>
+          <clID>EXAMPLE-TAG</clID>
+          <pw>foo-123</pw>
+          <options>
+            <version>1.0</version>
+            <lang>en</lang>
+          </options>
+          <svcs>
+            <objURI>urn:ietf:params:xml:ns:domain-1.0</objURI>
+            <objURI>urn:ietf:params:xml:ns:contact-1.0</objURI>
+            <objURI>urn:ietf:params:xml:ns:host-1.0</objURI>
+          </svcs>
+        </login>
+        <clTRID>ABC-12345</clTRID>
+      </command>
+    </epp>
+    }
+      
+    response = server.request(xml)
+    
+The EPP server would then return the XML response as a string, and set it equal to <tt>response</tt> for your usage.
+
+== Bugs/Issues
+
+Please report all issues using the GitHub issue tracker at:
+
+http://github.com/ultraspeed/epp/issues
+
+== Credit
+
+Author::          Josh Delsman at Ultraspeed (http://twitter.com/voxxit)
+Inspired from::   http://labs.centralnic.com/Net_EPP_Client.php
+
+== License
+
+The MIT License
 
 Copyright (c) 2009 Josh Delsman (Ultraspeed)
 
