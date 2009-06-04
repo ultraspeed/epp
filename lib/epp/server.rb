@@ -1,46 +1,144 @@
 module Epp #:nodoc:
   class Server
+    include REXML
     include RequiresParameters
+        
+    attr_accessor :tag, :password, :server, :port, :clTRID
     
+    # ==== Required Attrbiutes
+    # 
+    # * <tt>:server</tt> - The EPP server to connect to
+    # * <tt>:tag</tt> - The tag or username used with <tt><login></tt> requests.
+    # * <tt>:password</tt> - The password used with <tt><login></tt> requests.
+    # 
+    # ==== Optional Attributes
+    #
+    # * <tt>:port</tt> - The EPP standard port is 700. However, you can choose a different port to use.
+    # * <tt>:clTRID</tt> - The client transaction identifier is an element that EPP specifies MAY be used to uniquely identify the command to the server. You are responsible for maintaining your own transaction identifier space to ensure uniqueness. Defaults to "ABC-12345"
     def initialize(attributes = {})
-      requires!(attributes, :server, :port)
-
-      @connection = TCPSocket.new(attributes[:server], attributes[:port])
-      @socket     = OpenSSL::SSL::SSLSocket.new(@connection)
+      requires!(attributes, :tag, :password, :server)
       
-      # Initiate the connection to the server through the SSL socket
-      @socket.connect
-      
-      # Receive the EPP <greeting> frame which is sent by the server
-      # upon initial connection
-      get_frame
-    end
-
-    # Sends an XML request to the EPP server, and receives an XML response
-    def request(xml)
-      send_frame(xml)
-      get_frame
+      @tag      = attributes[:tag]
+      @password = attributes[:password]
+      @server   = attributes[:server]
+      @port     = attributes[:port] || 700
+      @clTRID   = attributes[:clTRID] || "ABC-12345"
     end
     
-    # Closes the connection to the EPP server. It should be noted
-    # that the EPP specification indicates that clients should send
-    # a <logout> command before ending the session, so it is recommended
-    # that you do so.
-    def close_connection
-      @socket.close if defined?(@socket) && !@socket.closed?
-      @connection.close if defined?(@connection) && !@connection.closed?
+    # Sends an XML request to the EPP server, and receives an XML response. 
+    # <tt><login></tt> and <tt><logout></tt> requests are also wrapped
+    # around the request, so we can close the socket immediately after
+    # the request is made.
+    def request(xml)
+      open_connection
+      
+      begin
+        login
+        @response = send_request(xml)
+      ensure
+        logout
+        close_connection
+      end
+
+      return @response
     end
     
     private
+    
+    # Wrapper which sends an XML frame to the server, and receives 
+    # the response frame in return.
+    def send_request(xml)
+      send_frame(xml)
+      response = get_frame
+    end
+    
+    def login
+      xml = Document.new
+      xml << XMLDecl.new("1.0", "UTF-8", "no")
+      
+      xml.add_element("epp", {
+        "xmlns" => "urn:ietf:params:xml:ns:epp-1.0",
+        "xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance",
+        "xsi:schemaLocation" => "urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd"
+      })
+      
+      command = xml.root.add_element("command")
+      login = command.add_element("login")
+      
+      login.add_element("clID").text = @tag
+      login.add_element("pw").text = @password
+      
+      options = login.add_element("options")
+      options.add_element("version").text = "1.0"
+      options.add_element("lang").text = "en"
+      
+      services = login.add_element("svcs")
+      services.add_element("objURI").text = "urn:ietf:params:xml:ns:domain-1.0"
+      services.add_element("objURI").text = "urn:ietf:params:xml:ns:contact-1.0"
+      services.add_element("objURI").text = "urn:ietf:params:xml:ns:host-1.0"
+      
+      command.add_element("clTRID").text = @clTRID
+
+      send_request(xml.to_s)
+    end
+    
+    def logout
+      xml = Document.new
+      xml << XMLDecl.new("1.0", "UTF-8", "no")
+      
+      xml.add_element('epp', {
+        'xmlns' => "urn:ietf:params:xml:ns:epp-1.0",
+        'xmlns:xsi' => "http://www.w3.org/2001/XMLSchema-instance",
+        'xsi:schemaLocation' => "urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd"
+      })
+      
+      command = xml.root.add_element("command")
+      login = command.add_element("logout")
+      
+      send_request(xml.to_s)
+    end
+    
+    # Establishes the connection to the server. If the connection is
+		# established, then this method will call get_frame and return 
+		# the EPP <tt><greeting></tt> frame which is sent by the 
+		# server upon connection.
+    def open_connection
+      @connection = TCPSocket.new(@server, @port)
+      @socket     = OpenSSL::SSL::SSLSocket.new(@connection)
+      
+      # Synchronously close the connection & socket
+      @socket.sync_close
+      
+      # Connect
+      @socket.connect
+      
+      # Get the initial frame
+      get_frame
+    end
+    
+    # Closes the connection to the EPP server.
+    def close_connection
+      if defined?(@socket) and @socket.is_a?(OpenSSL::SSL::SSLSocket)
+        @socket.close
+        @socket = nil
+      end
+      
+      if defined?(@connection) and @connection.is_a?(TCPSocket)
+        @connection.close
+        @connection = nil
+      end
+      
+      return true if @connection.nil? and @socket.nil?
+    end
     
     # Receive an EPP frame from the server. Since the connection is blocking,
     # this method will wait until the connection becomes available for use. If
     # the connection is broken, a SocketError will be raised. Otherwise,
     # it will return a string containing the XML from the server.
-    def get_frame
+    def get_frame      
       header = @socket.read(4)
 
-      if header.nil? and @socket.closed?
+      if header.nil? and @socket.eof?
         raise SocketError.new("Connection closed by remote server")
       elsif header.nil?
         raise SocketError.new("Error reading frame from remote server")
@@ -51,15 +149,18 @@ module Epp #:nodoc:
         if length < 5
           raise SocketError.new("Got bad frame header length of #{length} bytes from the server")
         else
-          @socket.read(length - 4)
+          response = @socket.read(length - 4)   
         end
       end
     end
     
     # Send an XML frame to the server. Should return the total byte
-    # size of the frame sent to the server.
+    # size of the frame sent to the server. If the socket returns EOF,
+    # the connection has closed and a SocketError is raised.
     def send_frame(xml)
-      @socket.write([xml.length].pack("N") + xml)
+      raise SocketError.new("Connection closed by remote server") if @socket.eof?
+      
+      @socket.write([xml.size + 4].pack("N") + xml)
     end
   end
 end
