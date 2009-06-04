@@ -1,4 +1,4 @@
-= EPP Version 1.0.1
+= EPP (by {Ultraspeed}[http://ultraspeed.co.uk])
 
 The EPP gem provides basic functionality for connecting and making requests on EPP (Extensible Provisioning Protocol) servers. Currently, major providers Centralnic and Nominet have been tested.
 
