@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.date = %q{2009-06-04}
   s.description = %q{Basic functionality for connecting and making requests on EPP (Extensible Provisioning Protocol) servers.}
   s.email = %q{jdelsman@ultraspeed.com}
-  s.files = ["lib/epp/server.rb", "lib/epp.rb", "lib/require_parameters.rb", "Rakefile", "README.rdoc", "test/test_epp.rb", "test/test_helper.rb"]
+  s.files = ["lib/epp/exceptions.rb", "lib/epp/server.rb", "lib/epp.rb", "lib/require_parameters.rb", "Rakefile", "README.rdoc", "test/test_epp.rb", "test/test_helper.rb"]
   s.has_rdoc = true
   s.homepage = %q{http://github.com/ultraspeed/epp}
   s.rdoc_options = ["--inline-source", "--charset=UTF-8"]
