@@ -24,48 +24,32 @@ Once you do that, you can install the gem by typing <tt>sudo rake gems:install</
 
 == Example Usage
 
-First, you must initialize an Epp::Server object to use. This requires the server address and port:
+First, you must initialize an Epp::Server object to use. This requires the EPP server address, tag/username and password:
 
     server = Epp::Server.new(
       :server => "testbed-epp.nominet.org.uk",
-      :port => 700
+      :tag => "TESTING",
+      :password => "testing"
     )
     
 If no port is specified, it will be assumed that you will be using port 700.
 
-You would then make an XML request to the server. You can build this however you'd like. For simplicity purposes, here is a string <tt><login></tt> request:
+You would then make an XML request to the server. 
 
-    xml = %{
-    <?xml version="1.0" encoding="UTF-8"?>
-    <epp xmlns="urn:ietf:params:xml:ns:epp-1.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
-      <command>
-        <login>
-          <clID>EXAMPLE-TAG</clID>
-          <pw>foo-123</pw>
-          <options>
-            <version>1.0</version>
-            <lang>en</lang>
-          </options>
-          <svcs>
-            <objURI>urn:ietf:params:xml:ns:domain-1.0</objURI>
-            <objURI>urn:ietf:params:xml:ns:contact-1.0</objURI>
-            <objURI>urn:ietf:params:xml:ns:host-1.0</objURI>
-          </svcs>
-        </login>
-        <clTRID>ABC-12345</clTRID>
-      </command>
-    </epp>
-    }
-      
-    response = server.request(xml)
-    
-The EPP server would then return the XML response as a string, and set it equal to <tt>response</tt> for your usage.
+    xml       = "<?xml ... </epp>"
+    response  = server.request(xml)
+  
+You can build this however you'd like. The process is as follows:
 
-You can close the connection to the server completely by using the following:
+* Connect to EPP server, get the <greeting> frame
+* Send a standard <login> request
+* Send your request
+* Send a standard <logout> request
+* Disconnect the socket from the server
 
-    server.close_connection
+The EPP server would then return the XML response as a string. In this example, the response XML would be set equal to <tt>response</tt> for your usage.
+
+Once the request is complete, it will automatically close the connection. For simplicity purposes, this plug-in will *not* use a persistent connection to the EPP server.
 
 == Bugs/Issues
 

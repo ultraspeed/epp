@@ -15,4 +15,8 @@ Gem::Specification.new do |s|
   s.rubyforge_project = %q{epp}
   s.rubygems_version = %q{1.3.2}
   s.summary = %q{Basic functionality for connecting and making requests on EPP (Extensible Provisioning Protocol) servers.}
+  
+  # Dependencies
+  s.add_dependency("activesupport", ">= 2.3.2")
+  s.add_dependency("hpricot", ">= 0.8.1")
 end

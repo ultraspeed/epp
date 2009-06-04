@@ -7,8 +7,10 @@ require 'socket'
 require 'activesupport'
 require 'require_parameters'
 require 'rexml/document'
+require 'hpricot'
 
-require 'epp/server.rb'
+require 'epp/server'
+require 'epp/exceptions'
 
 module Epp #:nodoc:
   VERSION = '1.0.2'

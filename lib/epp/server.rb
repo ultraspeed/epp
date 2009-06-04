@@ -1,6 +1,5 @@
 module Epp #:nodoc:
   class Server
-    include REXML
     include RequiresParameters
         
     attr_accessor :tag, :password, :server, :port, :clTRID
@@ -43,7 +42,7 @@ module Epp #:nodoc:
       return @response
     end
     
-    private
+    # private
     
     # Wrapper which sends an XML frame to the server, and receives 
     # the response frame in return.
@@ -53,8 +52,8 @@ module Epp #:nodoc:
     end
     
     def login
-      xml = Document.new
-      xml << XMLDecl.new("1.0", "UTF-8", "no")
+      xml = REXML::Document.new
+      xml << REXML::XMLDecl.new("1.0", "UTF-8", "no")
       
       xml.add_element("epp", {
         "xmlns" => "urn:ietf:params:xml:ns:epp-1.0",
@@ -79,12 +78,22 @@ module Epp #:nodoc:
       
       command.add_element("clTRID").text = @clTRID
 
-      send_request(xml.to_s)
+      # Receive the login response
+      response = Hpricot.XML(send_request(xml.to_s))
+      
+      result_message  = (response/"epp"/"response"/"result"/"msg").text.strip
+      result_code     = (response/"epp"/"response"/"result").attr("code").to_i
+      
+      if result_code == 1000
+        return true
+      else
+        raise EppErrorResponse.new(:code => result_code, :message => result_message)
+      end
     end
     
     def logout
-      xml = Document.new
-      xml << XMLDecl.new("1.0", "UTF-8", "no")
+      xml = REXML::Document.new
+      xml << REXML::XMLDecl.new("1.0", "UTF-8", "no")
       
       xml.add_element('epp', {
         'xmlns' => "urn:ietf:params:xml:ns:epp-1.0",
@@ -95,7 +104,17 @@ module Epp #:nodoc:
       command = xml.root.add_element("command")
       login = command.add_element("logout")
       
-      send_request(xml.to_s)
+      # Receive the logout response
+      response = Hpricot.XML(send_request(xml.to_s))
+      
+      result_message  = (response/"epp"/"response"/"result"/"msg").text.strip
+      result_code     = (response/"epp"/"response"/"result").attr("code").to_i
+      
+      if result_code == 1500
+        return true
+      else
+        raise EppErrorResponse.new(:code => result_code, :message => result_message)
+      end
     end
     
     # Establishes the connection to the server. If the connection is
@@ -157,9 +176,7 @@ module Epp #:nodoc:
     # Send an XML frame to the server. Should return the total byte
     # size of the frame sent to the server. If the socket returns EOF,
     # the connection has closed and a SocketError is raised.
-    def send_frame(xml)
-      raise SocketError.new("Connection closed by remote server") if @socket.eof?
-      
+    def send_frame(xml)      
       @socket.write([xml.size + 4].pack("N") + xml)
     end
   end
