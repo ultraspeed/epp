@@ -2,7 +2,7 @@ module Epp #:nodoc:
   class Server
     include RequiresParameters
         
-    attr_accessor :tag, :password, :server, :port, :clTRID
+    attr_accessor :tag, :password, :server, :port, :clTRID, :old_server
     
     # ==== Required Attrbiutes
     # 
@@ -14,14 +14,18 @@ module Epp #:nodoc:
     #
     # * <tt>:port</tt> - The EPP standard port is 700. However, you can choose a different port to use.
     # * <tt>:clTRID</tt> - The client transaction identifier is an element that EPP specifies MAY be used to uniquely identify the command to the server. You are responsible for maintaining your own transaction identifier space to ensure uniqueness. Defaults to "ABC-12345"
+    # * <tt>:old_server</tt> - Set to true to read and write frames in a way that is compatible with old EPP servers. Default is false.
+    # * <tt>:lang</tt> - Set custom language attribute. Default is 'en'.
     def initialize(attributes = {})
       requires!(attributes, :tag, :password, :server)
       
-      @tag      = attributes[:tag]
-      @password = attributes[:password]
-      @server   = attributes[:server]
-      @port     = attributes[:port] || 700
-      @clTRID   = attributes[:clTRID] || "ABC-12345"
+      @tag        = attributes[:tag]
+      @password   = attributes[:password]
+      @server     = attributes[:server]
+      @port       = attributes[:port] || 700
+      @clTRID     = attributes[:clTRID] || "ABC-12345"
+      @old_server = attributes[:old_server] || false
+      @lang       = attributes[:lang] || 'en'
     end
     
     # Sends an XML request to the EPP server, and receives an XML response. 
@@ -35,10 +39,10 @@ module Epp #:nodoc:
         login
         @response = send_request(xml)
       ensure
-        logout
+        logout unless @old_server
         close_connection
       end
-
+      
       return @response
     end
     
@@ -69,7 +73,7 @@ module Epp #:nodoc:
       
       options = login.add_element("options")
       options.add_element("version").text = "1.0"
-      options.add_element("lang").text = "en"
+      options.add_element("lang").text = @lang
       
       services = login.add_element("svcs")
       services.add_element("objURI").text = "urn:ietf:params:xml:ns:domain-1.0"
@@ -80,10 +84,10 @@ module Epp #:nodoc:
 
       # Receive the login response
       response = Hpricot.XML(send_request(xml.to_s))
-      
+
       result_message  = (response/"epp"/"response"/"result"/"msg").text.strip
       result_code     = (response/"epp"/"response"/"result").attr("code").to_i
-      
+   
       if result_code == 1000
         return true
       else
@@ -154,30 +158,46 @@ module Epp #:nodoc:
     # this method will wait until the connection becomes available for use. If
     # the connection is broken, a SocketError will be raised. Otherwise,
     # it will return a string containing the XML from the server.
-    def get_frame      
-      header = @socket.read(4)
+    def get_frame
+       if @old_server
+          data = ''
+          first_char = @socket.read(1)
+          if first_char.nil? and @socket.eof?
+            raise SocketError.new("Connection closed by remote server")
+          elsif first_char.nil?
+            raise SocketError.new("Error reading frame from remote server")
+          else
+             data << first_char
+             while char = @socket.read(1)
+                data << char
+                return data if data =~ %r|<\/epp>\n$|mi # at end
+             end
+          end
+       else
+          header = @socket.read(4)
 
-      if header.nil? and @socket.eof?
-        raise SocketError.new("Connection closed by remote server")
-      elsif header.nil?
-        raise SocketError.new("Error reading frame from remote server")
-      else
-        unpacked_header = header.unpack("N")
-        length = unpacked_header[0]
+          if header.nil? and @socket.eof?
+            raise SocketError.new("Connection closed by remote server")
+          elsif header.nil?
+            raise SocketError.new("Error reading frame from remote server")
+          else
+            unpacked_header = header.unpack("N")
+            length = unpacked_header[0]
 
-        if length < 5
-          raise SocketError.new("Got bad frame header length of #{length} bytes from the server")
-        else
-          response = @socket.read(length - 4)   
-        end
-      end
+            if length < 5
+              raise SocketError.new("Got bad frame header length of #{length} bytes from the server")
+            else
+              response = @socket.read(length - 4)   
+            end
+          end
+       end      
     end
-    
+
     # Send an XML frame to the server. Should return the total byte
     # size of the frame sent to the server. If the socket returns EOF,
     # the connection has closed and a SocketError is raised.
     def send_frame(xml)      
-      @socket.write([xml.size + 4].pack("N") + xml)
+       @socket.write( @old_server ? (xml + "\r\n") : ([xml.size + 4].pack("N") + xml) )
     end
   end
 end
