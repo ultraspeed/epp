@@ -91,7 +91,7 @@ module Epp #:nodoc:
       if result_code == 1000
         return true
       else
-        raise EppErrorResponse.new(:code => result_code, :message => result_message)
+        raise EppErrorResponse.new(:xml => response, :code => result_code, :message => result_message)
       end
     end
     
@@ -117,7 +117,7 @@ module Epp #:nodoc:
       if result_code == 1500
         return true
       else
-        raise EppErrorResponse.new(:code => result_code, :message => result_message)
+        raise EppErrorResponse.new(:xml => response, :code => result_code, :message => result_message)
       end
     end
     
@@ -160,16 +160,19 @@ module Epp #:nodoc:
     # it will return a string containing the XML from the server.
     def get_frame
        if @old_server
-          data = ''
+          data = ""
           first_char = @socket.read(1)
+          
           if first_char.nil? and @socket.eof?
             raise SocketError.new("Connection closed by remote server")
           elsif first_char.nil?
             raise SocketError.new("Error reading frame from remote server")
           else
              data << first_char
+             
              while char = @socket.read(1)
                 data << char
+                
                 return data if data =~ %r|<\/epp>\n$|mi # at end
              end
           end

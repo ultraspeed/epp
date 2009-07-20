@@ -12,5 +12,5 @@ require File.dirname(__FILE__) + '/epp/server.rb'
 require File.dirname(__FILE__) + '/epp/exceptions.rb'
 
 module Epp #:nodoc:
-  VERSION = '1.0.6'
+  VERSION = '1.0.8'
 end
