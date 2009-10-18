@@ -7,10 +7,15 @@ The EPP gem provides basic functionality for connecting and making requests on E
 
 == Installation
 
-You can install this gem with:
+If you already have {Gemcutter}[http://gemcutter.org] installed, you can install this gem with:
 
-    $ sudo gem sources -a http://gems.github.com
-    $ sudo gem install ultraspeed-epp
+    $ gem install epp
+    
+Otherwise, a few more steps are involved:
+
+    $ gem install gemcutter
+    $ gem tumble
+    $ gem install epp
     
 Then, you can require it in your Ruby app:
 
@@ -18,7 +23,7 @@ Then, you can require it in your Ruby app:
     
 If you're using Rails, add the following line to your Rails <tt>config/environment.rb</tt>:
 
-    config.gem "ultraspeed-epp", :lib => "epp", :source => "http://gems.github.com"
+    config.gem "epp", :source => "http://gemcutter.org"
     
 Once you do that, you can install the gem by typing <tt>sudo rake gems:install</tt>.
 
@@ -59,30 +64,9 @@ http://github.com/ultraspeed/epp/issues
 
 == Credit
 
-Author::          Josh Delsman at Ultraspeed (http://twitter.com/voxxit)
-Inspired from::   http://labs.centralnic.com/Net_EPP_Client.php
+Author: Josh Delsman at Ultraspeed (http://twitter.com/voxxit)
+Inspired from: http://labs.centralnic.com/Net_EPP_Client.php
 
 == License
 
-The MIT License
-
-Copyright (c) 2009 Josh Delsman (Ultraspeed)
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-'Software'), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+See the LICENSE file.
