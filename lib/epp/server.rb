@@ -85,7 +85,7 @@ module Epp #:nodoc:
         extensions_container.add_element("extURI").text = uri
       end
       
-      command.add_element("clTRID").text = @clTRID
+      command.add_element("clTRID").text = "ABC-12345"
 
       # Receive the login response
       response = Hpricot.XML(send_request(xml.to_s))
