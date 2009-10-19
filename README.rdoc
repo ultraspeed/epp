@@ -46,15 +46,15 @@ You would then make an XML request to the server.
   
 You can build this however you'd like. The process is as follows:
 
-* Connect to EPP server, get the <greeting> frame
+* Connect to EPP server and receive the <greeting> frame
 * Send a standard <login> request
 * Send your request
 * Send a standard <logout> request
 * Disconnect the socket from the server
 
-The EPP server would then return the XML response as a string. In this example, the response XML would be set equal to <tt>response</tt> for your usage.
+The EPP module would then return the XML response as a string. In this example, the response XML would be set equal to <tt>response</tt> for your usage.
 
-Once the request is complete, it will automatically close the connection. For simplicity purposes, this plug-in will *not* use a persistent connection to the EPP server.
+Once the request is complete, it will automatically close the connection. For simplicity purposes, this plug-in will *not* use a persistent connection to the EPP server. This may change in future releases, as some registries require that persistent connections be supported. Please feel free to email me to collaborate on making this possible.
 
 == Bugs/Issues
 

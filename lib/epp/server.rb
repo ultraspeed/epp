@@ -2,7 +2,7 @@ module Epp #:nodoc:
   class Server
     include RequiresParameters
         
-    attr_accessor :tag, :password, :server, :port, :old_server, :lang, :extensions, :version, :logged_in
+    attr_accessor :tag, :password, :server, :port, :old_server, :lang, :extensions, :version
     
     # ==== Required Attrbiutes
     # 
@@ -42,13 +42,13 @@ module Epp #:nodoc:
     def request(xml)
       open_connection
       
-      logged_in = true if login
+      @logged_in = true if login
       
       begin
         @response = send_request(xml)
       ensure
         if @logged_in && !@old_server
-          logged_in = false if logout
+          @logged_in = false if logout
         end
         
         close_connection
