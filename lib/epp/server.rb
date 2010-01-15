@@ -31,6 +31,7 @@ module Epp #:nodoc:
       @services   = attributes[:services]   || ["urn:ietf:params:xml:ns:domain-1.0", "urn:ietf:params:xml:ns:contact-1.0", "urn:ietf:params:xml:ns:host-1.0"]
       @extensions = attributes[:extensions] || []
       @version    = attributes[:verison]    || "1.0"
+      @debug_log  = attributes[:debug_log]  || false
       
       @logged_in  = false
     end
@@ -45,6 +46,7 @@ module Epp #:nodoc:
       @logged_in = true if login
       
       begin
+        puts "** EPP - Sending frame..." if @debug_log
         @response = send_request(xml)
       ensure
         if @logged_in && !@old_server
@@ -61,6 +63,8 @@ module Epp #:nodoc:
     
     # Sends a standard login request to the EPP server.
     def login
+      puts "** EPP - Attempting login..." if @debug_log
+      
       xml = new_epp_request
       
       command = xml.root.add_element("command")
@@ -94,6 +98,7 @@ module Epp #:nodoc:
       result_code     = (response/"epp"/"response"/"result").attr("code").to_i
    
       if result_code == 1000
+        puts "** EPP - Successfully logged in." if @debug_log
         return true
       else
         raise EppErrorResponse.new(:xml => response, :code => result_code, :message => result_message)
@@ -102,6 +107,8 @@ module Epp #:nodoc:
     
     # Sends a standard logout request to the EPP server.
     def logout
+      puts "** EPP - Attempting logout..." if @debug_log
+      
       xml = new_epp_request
       
       command = xml.root.add_element("command")
@@ -114,6 +121,7 @@ module Epp #:nodoc:
       result_code     = (response/"epp"/"response"/"result").attr("code").to_i
       
       if result_code == 1500
+        puts "** EPP - Successfully logged out." if @debug_log
         return true
       else
         raise EppErrorResponse.new(:xml => response, :code => result_code, :message => result_message)
@@ -155,7 +163,12 @@ module Epp #:nodoc:
       @socket.connect
       
       # Get the initial frame
-      get_frame
+      frame = get_frame
+      
+      if frame
+        puts "EPP - Connection opened." if @debug_log
+        return frame
+      end
     end
     
     # Closes the connection to the EPP server.
@@ -170,7 +183,10 @@ module Epp #:nodoc:
         @connection = nil
       end
       
-      return true if @connection.nil? and @socket.nil?
+      if @connection.nil? and @socket.nil?
+        puts "EPP - Connection closed." if @debug_log
+        return true
+      end
     end
     
     # Receive an EPP frame from the server. Since the connection is blocking,
