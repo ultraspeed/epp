@@ -2,7 +2,7 @@
 require 'rubygems'
 require 'openssl'
 require 'socket'
-require 'activesupport'
+require 'active_support'
 require 'rexml/document'
 require 'hpricot'
 
