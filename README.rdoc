@@ -7,25 +7,21 @@ The EPP gem provides basic functionality for connecting and making requests on E
 
 == Installation
 
-If you already have {Gemcutter}[http://gemcutter.org] installed, you can install this gem with:
+You can install this gem with:
 
     $ gem install epp
     
-Otherwise, a few more steps are involved:
-
-    $ gem install gemcutter
-    $ gem tumble
-    $ gem install epp
-    
-Then, you can require it in your Ruby app:
+Then, you can require it in your Ruby/Rails app:
 
     require "epp"
     
-If you're using Rails, add the following line to your Rails <tt>config/environment.rb</tt>:
+If you're using Rails, configure your gem in the following file:
 
-    config.gem "epp", :source => "http://gemcutter.org"
+    # Rails 2.x - config/environment.rb
+    config.gem "epp"
     
-Once you do that, you can install the gem by typing <tt>sudo rake gems:install</tt>.
+    # Rails 3 - Gemfile
+    gem "epp"
 
 == Example Usage
 
@@ -64,7 +60,7 @@ http://github.com/ultraspeed/epp/issues
 
 == Credit
 
-Author: Josh Delsman at Ultraspeed (http://twitter.com/voxxit)
+Author: Josh Delsman (http://twitter.com/voxxit)
 Inspired from: http://labs.centralnic.com/Net_EPP_Client.php
 
 == License

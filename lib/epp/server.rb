@@ -1,8 +1,9 @@
 module Epp #:nodoc:
   class Server
+    include REXML
     include RequiresParameters
         
-    attr_accessor :tag, :password, :server, :port, :old_server, :lang, :extensions, :version
+    attr_accessor :tag, :password, :server, :port, :old_server, :services, :lang, :extensions, :version
     
     # ==== Required Attrbiutes
     # 
@@ -27,7 +28,7 @@ module Epp #:nodoc:
       @server     = attributes[:server]
       @port       = attributes[:port]       || 700
       @old_server = attributes[:old_server] || false
-      @lang       = attributes[:lang]       || 'en'
+      @lang       = attributes[:lang]       || "en"
       @services   = attributes[:services]   || ["urn:ietf:params:xml:ns:domain-1.0", "urn:ietf:params:xml:ns:contact-1.0", "urn:ietf:params:xml:ns:host-1.0"]
       @extensions = attributes[:extensions] || []
       @version    = attributes[:verison]    || "1.0"
@@ -49,7 +50,7 @@ module Epp #:nodoc:
         puts "** EPP - Sending frame..." if @debug_log
         @response = send_request(xml)
       ensure
-        if @logged_in && !@old_server
+        if @logged_in && !old_server
           @logged_in = false if logout
         end
         
@@ -70,12 +71,12 @@ module Epp #:nodoc:
       command = xml.root.add_element("command")
       login = command.add_element("login")
       
-      login.add_element("clID").text = @tag
-      login.add_element("pw").text = @password
+      login.add_element("clID").text = tag
+      login.add_element("pw").text = password
       
       options = login.add_element("options")
-      options.add_element("version").text = @version
-      options.add_element("lang").text = @lang
+      options.add_element("version").text = version
+      options.add_element("lang").text = lang
       
       services = login.add_element("svcs")
       services.add_element("objURI").text = "urn:ietf:params:xml:ns:domain-1.0"
@@ -83,9 +84,9 @@ module Epp #:nodoc:
       services.add_element("objURI").text = "urn:ietf:params:xml:ns:host-1.0"
       
       # Include schema extensions for registrars which require it
-      extensions_container = services.add_element("svcExtension") unless @extensions.empty?
+      extensions_container = services.add_element("svcExtension") unless extensions.empty?
       
-      for uri in @extensions
+      for uri in extensions
         extensions_container.add_element("extURI").text = uri
       end
       
@@ -129,8 +130,8 @@ module Epp #:nodoc:
     end
     
     def new_epp_request
-      xml = REXML::Document.new
-      xml << REXML::XMLDecl.new("1.0", "UTF-8", "no")
+      xml = Document.new
+      xml << XMLDecl.new("1.0", "UTF-8", "no")
       
       xml.add_element("epp", {
         "xmlns" => "urn:ietf:params:xml:ns:epp-1.0",
@@ -153,7 +154,7 @@ module Epp #:nodoc:
 		# the EPP <tt><greeting></tt> frame which is sent by the 
 		# server upon connection.
     def open_connection
-      @connection = TCPSocket.new(@server, @port)
+      @connection = TCPSocket.new(server, port)
       @socket     = OpenSSL::SSL::SSLSocket.new(@connection)
       
       # Synchronously close the connection & socket
@@ -194,7 +195,7 @@ module Epp #:nodoc:
     # the connection is broken, a SocketError will be raised. Otherwise,
     # it will return a string containing the XML from the server.
     def get_frame
-       if @old_server
+       if old_server
           data = ""
           first_char = @socket.read(1)
           
@@ -235,7 +236,7 @@ module Epp #:nodoc:
     # size of the frame sent to the server. If the socket returns EOF,
     # the connection has closed and a SocketError is raised.
     def send_frame(xml)
-      @socket.write(@old_server ? (xml + "\r\n") : ([xml.size + 4].pack("N") + xml))
+      @socket.write(old_server ? (xml + "\r\n") : ([xml.size + 4].pack("N") + xml))
     end
   end
 end
