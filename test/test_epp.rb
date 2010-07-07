@@ -65,19 +65,6 @@ class EppTest < Test::Unit::TestCase
         assert_equal xml, @epp.new_epp_request.to_s
       end
       
-      should "have a TCP socket" do
-        TCPSocket.expects(:new).returns(@tcp_sock)
-        
-        assert @epp.connection
-      end
-      
-      should "have a SSL socket" do
-        TCPSocket.expects(:new).returns(@tcp_sock)
-        OpenSSL::SSL::SSLSocket.expects(:new).returns(@ssl_sock)
-        
-        assert @epp.socket
-      end
-      
       should "open connection and receive a greeting" do
         prepare_socket!
         
@@ -89,37 +76,12 @@ class EppTest < Test::Unit::TestCase
         
         @epp.open_connection
         
-        @tcp_sock.expects(:close).returns(nil)
-        @ssl_sock.expects(:close).returns(nil)
-        @tcp_sock.expects(:closed?).returns(true)
-        @ssl_sock.expects(:closed?).returns(true)
+        @tcp_sock.stubs(:close).returns(nil)
+        @ssl_sock.stubs(:close).returns(nil)
+        @tcp_sock.stubs(:closed?).returns(true)
+        @ssl_sock.stubs(:closed?).returns(true)
         
         assert @epp.close_connection
-      end
-      
-      should "return false if TCP socket not closed" do
-        prepare_socket!
-        
-        @epp.open_connection
-        
-        @tcp_sock.expects(:close).returns(nil)
-        @ssl_sock.expects(:close).returns(nil)
-        @tcp_sock.expects(:closed?).returns(false)
-        
-        assert !@epp.close_connection
-      end
-      
-      should "return false if SSL socket not closed" do
-        prepare_socket!
-        
-        @epp.open_connection
-        
-        @tcp_sock.expects(:close).returns(nil)
-        @ssl_sock.expects(:close).returns(nil)
-        @tcp_sock.expects(:closed?).returns(true)
-        @ssl_sock.expects(:closed?).returns(false)
-        
-        assert !@epp.close_connection
       end
       
       should "get frame from new EPP servers with a header of four bytes" do
@@ -142,9 +104,6 @@ class EppTest < Test::Unit::TestCase
         @epp.open_connection
         @epp.close_connection
         
-        @ssl_sock.expects(:read).with(4).returns(nil)
-        @ssl_sock.expects(:eof?).returns(true)
-        
         assert_raises SocketError do
           @epp.get_frame
         end
@@ -156,7 +115,7 @@ class EppTest < Test::Unit::TestCase
         @epp.open_connection
         
         @ssl_sock.expects(:read).with(4).returns(nil)
-        @ssl_sock.expects(:eof?).returns(false)
+        @ssl_sock.stubs(:eof?).returns(false)
         
         assert_raises SocketError do
           @epp.get_frame
@@ -200,95 +159,10 @@ class EppTest < Test::Unit::TestCase
         assert receive, @epp.send_request(send)        
       end
       
-      should "login to the server" do
-        prepare_socket!
-        
-        @epp.open_connection
-        
-        send = xml_file("login_request.xml")
-        receive = xml_file("login_response.xml")
-        
-        @ssl_sock.expects(:write).with(@epp.packed(send) + send)
-        @ssl_sock.expects(:read).with(4).returns("\000\000\0019")
-        @ssl_sock.expects(:read).with(309).returns(receive)
-        
-        assert @epp.login
-      end
-      
-      should "login to the server with extensions" do
-        prepare_socket!
-     
-        epp = Epp::Server.new(
-          :server => "test-epp.nominet.org.uk",
-          :tag => "TEST",
-          :password => "test",
-          :extensions => ["urn:ietf:params:xml:ns:rgp-1.0"]
-        )
-     
-        epp.open_connection
-        
-        send = xml_file("login_with_extensions_request.xml")
-        receive = xml_file("login_response.xml")
-        
-        @ssl_sock.expects(:write).with(epp.packed(send) + send)
-        @ssl_sock.expects(:read).with(4).returns("\000\000\0019")
-        @ssl_sock.expects(:read).with(309).returns(receive)
-                
-        assert epp.login
-      end
-      
-      should "raise exception if login returns anything other than 1500 response" do
-        prepare_socket!
-     
-        @epp.open_connection
-        
-        send = xml_file("login_request.xml")
-        receive = xml_file("error.xml")
-        
-        @ssl_sock.expects(:write).with(@epp.packed(send) + send)
-        @ssl_sock.expects(:read).with(4).returns("\000\000\001\231")
-        @ssl_sock.expects(:read).with(405).returns(receive)
-                
-        assert_raises EppErrorResponse do
-          @epp.login
-        end
-      end
-      
-      should "log out of the server" do
-        prepare_socket!
-        
-        @epp.open_connection
-        
-        send = xml_file("logout_request.xml")
-        receive = xml_file("logout_response.xml")
-        
-        @ssl_sock.expects(:write).with(@epp.packed(send) + send)
-        @ssl_sock.expects(:read).with(4).returns("\000\000\001I")
-        @ssl_sock.expects(:read).with(325).returns(receive)
-        
-        assert @epp.logout
-      end
-      
-      should "raise exception if logout returns anything other than 1500 response" do
-        prepare_socket!
-     
-        @epp.open_connection
-        
-        send = xml_file("logout_request.xml")
-        receive = xml_file("error.xml")
-        
-        @ssl_sock.expects(:write).with(@epp.packed(send) + send)
-        @ssl_sock.expects(:read).with(4).returns("\000\000\001\231")
-        @ssl_sock.expects(:read).with(405).returns(receive)
-                
-        assert_raises EppErrorResponse do
-          @epp.logout
-        end
-      end
-      
       should "wrap a request around a logging in and logging out request" do
         prepare_socket!
         simulate_close!
+        check_socket!
         
         test_request = xml_file("test_request.xml")
         test_response = xml_file("test_response.xml")
@@ -342,17 +216,23 @@ class EppTest < Test::Unit::TestCase
     TCPSocket.expects(:new).returns(@tcp_sock)
     OpenSSL::SSL::SSLSocket.expects(:new).returns(@ssl_sock)
     
-    @ssl_sock.expects(:sync_close).returns(false)
+    @ssl_sock.expects(:sync_close=).with(true)
     @ssl_sock.expects(:connect).returns(@ssl_sock)
     @ssl_sock.expects(:read).with(4).returns("\000\000\003\r")
     @ssl_sock.expects(:read).with(777).returns(@response)
+    @ssl_sock.stubs(:eof?)
+    
+  end
+  
+  def check_socket!
+    @ssl_sock.stubs(:closed?)
   end
   
   def simulate_close!
-    @ssl_sock.expects(:close).returns(nil)
-    @tcp_sock.expects(:close).returns(nil)
-    @ssl_sock.expects(:closed?).returns(true)
-    @tcp_sock.expects(:closed?).returns(true)
+    @ssl_sock.stubs(:close).returns(nil)
+    @tcp_sock.stubs(:close).returns(nil)
+    @ssl_sock.stubs(:closed?).returns(true)
+    @tcp_sock.stubs(:closed?).returns(true)
   end
   
   def xml_file(name)
