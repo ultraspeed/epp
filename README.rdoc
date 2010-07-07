@@ -1,4 +1,4 @@
-= EPP v1.3.0 (by {Ultraspeed}[http://ultraspeed.co.uk])
+= EPP v1.3.1 (by {Ultraspeed}[http://ultraspeed.co.uk])
 
 The EPP gem provides basic functionality for connecting and making requests on EPP (Extensible Provisioning Protocol) servers. It has been fully tested against the RFC 5730 & 5734 specification.
 
@@ -42,7 +42,7 @@ You would then make an XML request to the server.
     xml       = "<?xml ... </epp>"
     response  = server.request(xml)
   
-You can build this however you'd like. The process is as follows:
+You can build this however you'd like, although we prefer Hpricot. The process is as follows:
 
 * Connect to EPP server and receive the <greeting> frame
 * Send a standard <login> request
