@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xsi:schemaLocation="urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd">
+  <greeting>
+    <svID>CoCCA EPP Server - epp.cocca.iors.cx</svID>
+    <svDate>2010-07-07T12:46:33.0536Z</svDate>
+    <svcMenu>
+      <version>1.0</version>
+      <lang>en</lang>
+      <objURI>urn:ietf:params:xml:ns:contact-1.0</objURI>
+      <objURI>urn:ietf:params:xml:ns:domain-1.0</objURI>
+      <objURI>urn:ietf:params:xml:ns:host-1.0</objURI>
+      <svcExtension>
+        <extURI>urn:ietf:params:xml:ns:rgp-1.0</extURI>
+      </svcExtension>
+    </svcMenu>
+    <dcp>
+      <access><all/></access>
+      <statement>
+        <purpose><admin/><prov/></purpose>
+        <recipient><ours/><public/></recipient>
+        <retention><stated/></retention>
+      </statement>
+    </dcp>
+  </greeting>
+</epp>

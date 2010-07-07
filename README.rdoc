@@ -1,6 +1,8 @@
-= EPP (by {Ultraspeed}[http://ultraspeed.co.uk])
+= EPP v1.3.0 (by {Ultraspeed}[http://ultraspeed.co.uk])
 
-The EPP gem provides basic functionality for connecting and making requests on EPP (Extensible Provisioning Protocol) servers. Currently, major providers Centralnic and Nominet have been tested.
+The EPP gem provides basic functionality for connecting and making requests on EPP (Extensible Provisioning Protocol) servers. It has been fully tested against the RFC 5730 & 5734 specification.
+
+Currently, major providers Centralnic and Nominet have been integrated using this gem. CoCCA is currently in testing.
 
 * {Nominet Standard EPP Documentation}[http://www.nominet.org.uk/registrars/systems/standardepp/]
 * {Centralnic Labs EPP Documentation}[http://labs.centralnic.com/epp/]

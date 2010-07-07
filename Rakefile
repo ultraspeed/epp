@@ -14,6 +14,7 @@ begin
     
     # Dependencies
     gem.add_development_dependency "shoulda"
+    gem.add_development_dependency "mocha"
     gem.add_dependency "activesupport"
     gem.add_dependency "hpricot"
   end
@@ -24,7 +25,7 @@ end
 require 'rake/testtask'
 Rake::TestTask.new(:test) do |test|
   test.libs << 'lib' << 'test'
-  test.pattern = 'test/**/*_test.rb'
+  test.pattern = 'test/**/test_*.rb'
   test.verbose = true
 end
 
@@ -33,7 +34,7 @@ begin
   
   Rcov::RcovTask.new do |test|
     test.libs << 'test'
-    test.pattern = 'test/**/*_test.rb'
+    test.pattern = 'test/**/test_*.rb'
     test.verbose = true
   end
 rescue LoadError
@@ -45,7 +46,6 @@ end
 task :test => :check_dependencies
 task :default => :test
 
-require 'sdoc'
 require 'rake/rdoctask'
 Rake::RDocTask.new do |rdoc|
   version = File.exist?('VERSION') ? File.read('VERSION') : ""
