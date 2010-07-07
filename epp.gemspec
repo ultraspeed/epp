@@ -26,7 +26,18 @@ Gem::Specification.new do |s|
      "lib/epp/exceptions.rb",
      "lib/epp/server.rb",
      "lib/require_parameters.rb",
-     "test/test_helper.rb"
+     "test/test_epp.rb",
+     "test/test_helper.rb",
+     "test/xml/error.xml",
+     "test/xml/login_request.xml",
+     "test/xml/login_response.xml",
+     "test/xml/login_with_extensions_request.xml",
+     "test/xml/logout_request.xml",
+     "test/xml/logout_response.xml",
+     "test/xml/new_request.xml",
+     "test/xml/socket_preparation.xml",
+     "test/xml/test_request.xml",
+     "test/xml/test_response.xml"
   ]
   s.homepage = %q{http://github.com/ultraspeed/epp}
   s.rdoc_options = ["--charset=UTF-8"]
