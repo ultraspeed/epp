@@ -61,7 +61,7 @@ class EppTest < Test::Unit::TestCase
       should "build a new XML request" do
         xml = xml_file("new_request.xml")
         
-        assert @epp.new_epp_request.is_a?(REXML::Document)
+        assert @epp.new_epp_request.is_a?(LibXML::XML::Document)
         assert_equal xml, @epp.new_epp_request.to_s
       end
       

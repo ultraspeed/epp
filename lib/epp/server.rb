@@ -1,6 +1,6 @@
 module Epp #:nodoc:
   class Server
-    include REXML
+    include LibXML::XML
     include RequiresParameters
         
     attr_accessor :tag, :password, :server, :port, :lang, :services, :extensions, :version
@@ -34,14 +34,12 @@ module Epp #:nodoc:
     end
     
     def new_epp_request
-      xml  = Document.new
-      xml << XMLDecl.new("1.0", "UTF-8", "no")
+      xml = Document.new
+      xml.root = Node.new("epp")
       
-      xml.add_element("epp", {
-        "xmlns" => "urn:ietf:params:xml:ns:epp-1.0",
-        "xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance",
-        "xsi:schemaLocation" => "urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd"
-      })
+      xml.root["xmlns"] = "urn:ietf:params:xml:ns:epp-1.0"
+      xml.root["xmlns:xsi"] = "http://www.w3.org/2001/XMLSchema-instance"
+      xml.root["xsi:schemaLocation"] = "urn:ietf:params:xml:ns:epp-1.0 epp-1.0.xsd"
       
       return xml
     end
@@ -140,30 +138,32 @@ module Epp #:nodoc:
       
       xml = new_epp_request
       
-      command = xml.root.add_element("command")
-      login = command.add_element("login")
+      xml.root << command = Node.new("command")
+      command << login = Node.new("login")
       
-      login.add_element("clID").text = tag
-      login.add_element("pw").text = password
+      login << Node.new("clID", tag)
+      login << Node.new("pw", password)
       
-      options = login.add_element("options")
-      options.add_element("version").text = version
-      options.add_element("lang").text = lang
+      login << options = Node.new("options")
       
-      services = login.add_element("svcs")
-      services.add_element("objURI").text = "urn:ietf:params:xml:ns:domain-1.0"
-      services.add_element("objURI").text = "urn:ietf:params:xml:ns:contact-1.0"
-      services.add_element("objURI").text = "urn:ietf:params:xml:ns:host-1.0"
+      options << Node.new("version", version)
+      options << Node.new("lang", lang)
       
-      extensions_container = services.add_element("svcExtension") unless extensions.empty?
+      login << services = Node.new("svcs")
+      
+      services << Node.new("objURI", "urn:ietf:params:xml:ns:domain-1.0")
+      services << Node.new("objURI", "urn:ietf:params:xml:ns:contact-1.0")
+      services << Node.new("objURI", "urn:ietf:params:xml:ns:host-1.0")
+      
+      services << extensions_container = Node.new("svcExtension") unless extensions.empty?
       
       for uri in extensions
-        extensions_container.add_element("extURI").text = uri
+        extensions_container << Node.new("extURI", uri)
       end
       
-      command.add_element("clTRID").text = UUIDTools::UUID.timestamp_create.to_s
+      command << Node.new("clTRID", UUIDTools::UUID.timestamp_create.to_s)
 
-      response = Hpricot.XML(send_request(xml.to_s))
+      response = Hpricot::XML(send_request(xml.to_s))
 
       handle_response(response)
     end
@@ -174,12 +174,12 @@ module Epp #:nodoc:
       
       xml = new_epp_request
       
-      command = xml.root.add_element("command")
+      xml.root << command = Node.new("command")
       
-      command.add_element("logout")
-      command.add_element("clTRID").text = UUIDTools::UUID.timestamp_create.to_s
+      command << login = Node.new("logout")
+      command << Node.new("clTRID", UUIDTools::UUID.timestamp_create.to_s)
       
-      response = Hpricot.XML(send_request(xml.to_s))
+      response = Hpricot::XML(send_request(xml.to_s))
       
       handle_response(response, 1500)
     end

@@ -1,7 +1,7 @@
 # Gem and other dependencies
 require 'rubygems'
 require 'openssl'
-require 'rexml/document'
+require 'libxml'
 require 'hpricot'
 require 'uuidtools'
 
