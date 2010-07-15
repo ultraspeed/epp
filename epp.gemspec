@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{epp}
-  s.version = "1.3.2"
+  s.version = "1.4.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Josh Delsman"]
@@ -57,15 +57,18 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<shoulda>, [">= 0"])
       s.add_development_dependency(%q<mocha>, [">= 0"])
       s.add_runtime_dependency(%q<hpricot>, [">= 0"])
+      s.add_runtime_dependency(%q<libxml-ruby>, [">= 0"])
     else
       s.add_dependency(%q<shoulda>, [">= 0"])
       s.add_dependency(%q<mocha>, [">= 0"])
       s.add_dependency(%q<hpricot>, [">= 0"])
+      s.add_dependency(%q<libxml-ruby>, [">= 0"])
     end
   else
     s.add_dependency(%q<shoulda>, [">= 0"])
     s.add_dependency(%q<mocha>, [">= 0"])
     s.add_dependency(%q<hpricot>, [">= 0"])
+    s.add_dependency(%q<libxml-ruby>, [">= 0"])
   end
 end
 
