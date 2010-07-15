@@ -15,7 +15,6 @@ begin
     # Dependencies
     gem.add_development_dependency "shoulda"
     gem.add_development_dependency "mocha"
-    gem.add_dependency "activesupport"
     gem.add_dependency "hpricot"
   end
 rescue LoadError

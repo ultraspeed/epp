@@ -1,10 +1,9 @@
 # Gem and other dependencies
 require 'rubygems'
 require 'openssl'
-require 'socket'
-require 'active_support'
 require 'rexml/document'
 require 'hpricot'
+require 'uuidtools'
 
 # Package files
 require File.dirname(__FILE__) + '/require_parameters.rb'

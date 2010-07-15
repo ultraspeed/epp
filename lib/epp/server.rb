@@ -3,7 +3,7 @@ module Epp #:nodoc:
     include REXML
     include RequiresParameters
         
-    attr_accessor :tag, :password, :server, :port, :services, :lang, :extensions, :version
+    attr_accessor :tag, :password, :server, :port, :lang, :services, :extensions, :version
     
     # ==== Required Attrbiutes
     # 
@@ -14,7 +14,6 @@ module Epp #:nodoc:
     # ==== Optional Attributes
     #
     # * <tt>:port</tt> - The EPP standard port is 700. However, you can choose a different port to use.
-    # * <tt>:clTRID</tt> - The client transaction identifier is an element that EPP specifies MAY be used to uniquely identify the command to the server. You are responsible for maintaining your own transaction identifier space to ensure uniqueness. Defaults to "ABC-12345"
     # * <tt>:lang</tt> - Set custom language attribute. Default is 'en'.
     # * <tt>:services</tt> - Use custom EPP services in the <login> frame. The defaults use the EPP standard domain, contact and host 1.0 services.
     # * <tt>:extensions</tt> - URLs to custom extensions to standard EPP. Use these to extend the standard EPP (e.g., Nominet uses extensions). Defaults to none.
@@ -35,7 +34,7 @@ module Epp #:nodoc:
     end
     
     def new_epp_request
-      xml = Document.new
+      xml  = Document.new
       xml << XMLDecl.new("1.0", "UTF-8", "no")
       
       xml.add_element("epp", {
@@ -59,10 +58,8 @@ module Epp #:nodoc:
       begin
         @response = send_request(xml)
       ensure
-        if @logged_in
-          @logged_in = false if logout
-        end
-        
+        @logged_in = false if @logged_in && logout
+                
         close_connection
       end
       
@@ -92,8 +89,9 @@ module Epp #:nodoc:
     
     # Closes the connection to the EPP server.
     def close_connection
-      @socket.close if @socket and not @socket.closed?
+      @socket.close     if @socket and not @socket.closed?
       @connection.close if @connection and not @connection.closed?
+      
       @socket = @connection = nil
 
       return true
@@ -107,14 +105,14 @@ module Epp #:nodoc:
       raise SocketError.new("Connection closed by remote server") if !@socket or @socket.eof?
 
       header = @socket.read(4)
-      
+    
       raise SocketError.new("Error reading frame from remote server") if header.nil?
-      
+    
       length = header_size(header)
-      
+    
       raise SocketError.new("Got bad frame header length of #{length} bytes from the server") if length < 5
-      
-      response = @socket.read(length - 4)
+    
+      return @socket.read(length - 4)
     end
 
     # Send an XML frame to the server. Should return the total byte
@@ -131,8 +129,7 @@ module Epp #:nodoc:
     
     # Returns size of header of response from the EPP server.
     def header_size(header)
-      unpacked_header = header.unpack("N")
-      unpacked_header[0]
+      header.unpack("N").first
     end
     
     private 
@@ -164,37 +161,37 @@ module Epp #:nodoc:
         extensions_container.add_element("extURI").text = uri
       end
       
-      command.add_element("clTRID").text = "ABC-12345"
+      command.add_element("clTRID").text = UUIDTools::UUID.timestamp_create.to_s
 
       response = Hpricot.XML(send_request(xml.to_s))
 
-      result_message  = (response/"epp"/"response"/"result"/"msg").text.strip
-      result_code     = (response/"epp"/"response"/"result").attr("code").to_i
-   
-      if result_code == 1000
-        return true
-      else
-        raise EppErrorResponse.new(:xml => response, :code => result_code, :message => result_message)
-      end
+      handle_response(response)
     end
     
     # Sends a standard logout request to the EPP server.
-    def logout      
+    def logout
       raise SocketError, "Socket must be opened before logging out" if !@socket or @socket.closed?
       
       xml = new_epp_request
       
       command = xml.root.add_element("command")
-      login = command.add_element("logout")
+      
+      command.add_element("logout")
+      command.add_element("clTRID").text = UUIDTools::UUID.timestamp_create.to_s
       
       response = Hpricot.XML(send_request(xml.to_s))
       
-      result_message  = (response/"epp"/"response"/"result"/"msg").text.strip
-      result_code     = (response/"epp"/"response"/"result").attr("code").to_i
+      handle_response(response, 1500)
+    end
+    
+    def handle_response(response, acceptable_response = 1000)
+      result_code = (response/"epp"/"response"/"result").attr("code").to_i
       
-      if result_code == 1500
+      if result_code == acceptable_response
         return true
       else
+        result_message  = (response/"epp"/"response"/"result"/"msg").text.strip
+        
         raise EppErrorResponse.new(:xml => response, :code => result_code, :message => result_message)
       end
     end

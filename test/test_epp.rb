@@ -211,7 +211,7 @@ class EppTest < Test::Unit::TestCase
   private
   
   def prepare_socket!
-    @response = xml_file("test_request.xml")
+    @response = xml_file("test_response.xml")
     
     TCPSocket.expects(:new).returns(@tcp_sock)
     OpenSSL::SSL::SSLSocket.expects(:new).returns(@ssl_sock)
@@ -221,7 +221,6 @@ class EppTest < Test::Unit::TestCase
     @ssl_sock.expects(:read).with(4).returns("\000\000\003\r")
     @ssl_sock.expects(:read).with(777).returns(@response)
     @ssl_sock.stubs(:eof?)
-    
   end
   
   def check_socket!
