@@ -29,6 +29,11 @@ module Epp #:nodoc:
       @services   = attributes[:services]   || ["urn:ietf:params:xml:ns:domain-1.0", "urn:ietf:params:xml:ns:contact-1.0", "urn:ietf:params:xml:ns:host-1.0"]
       @extensions = attributes[:extensions] || []
       @version    = attributes[:version]    || "1.0"
+
+      @sslcert    = attributes[:sslcert]
+      @sslkey     = attributes[:sslkey]
+      if @sslcert then requires!(attributes, :sslkey) end
+      if @sslkey then requires!(attributes, :sslcert) end
       
       @logged_in  = false
     end
@@ -77,7 +82,14 @@ module Epp #:nodoc:
 		# server upon connection.
     def open_connection
       @connection = TCPSocket.new(server, port)
-      @socket = OpenSSL::SSL::SSLSocket.new(@connection) if @connection
+      if @sslcert and @sslkey then
+          sslcontext = OpenSSL::SSL::SSLContext.new
+          sslcontext.cert = OpenSSL::X509::Certificate.new( File.open( @sslcert ) );
+          sslcontext.key = OpenSSL::PKey::RSA.new( File.open( @sslkey ) );
+          @socket = OpenSSL::SSL::SSLSocket.new(@connection,sslcontext) if @connection
+      else
+        @socket = OpenSSL::SSL::SSLSocket.new(@connection) if @connection
+      end
       
       @socket.sync_close = true
       @socket.connect
