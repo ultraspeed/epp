@@ -3,7 +3,7 @@ module Epp #:nodoc:
     include LibXML::XML
     include RequiresParameters
         
-    attr_accessor :tag, :password, :server, :port, :lang, :services, :extensions, :version
+    attr_accessor :tag, :password, :server, :port, :lang, :services, :extensions, :version, :ssl_context
     
     # ==== Required Attrbiutes
     # 
@@ -29,6 +29,8 @@ module Epp #:nodoc:
       @services   = attributes[:services]   || ["urn:ietf:params:xml:ns:domain-1.0", "urn:ietf:params:xml:ns:contact-1.0", "urn:ietf:params:xml:ns:host-1.0"]
       @extensions = attributes[:extensions] || []
       @version    = attributes[:version]    || "1.0"
+
+      @ssl_context = attributes[:ssl_context] || nil
       
       @logged_in  = false
     end
@@ -77,7 +79,7 @@ module Epp #:nodoc:
 		# server upon connection.
     def open_connection
       @connection = TCPSocket.new(server, port)
-      @socket = OpenSSL::SSL::SSLSocket.new(@connection) if @connection
+      @socket = OpenSSL::SSL::SSLSocket.new(@connection, @ssl_context) if @connection
       
       @socket.sync_close = true
       @socket.connect
