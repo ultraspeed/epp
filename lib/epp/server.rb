@@ -32,7 +32,7 @@ module Epp #:nodoc:
       
       @logged_in  = false
     end
-    
+
     def new_epp_request
       xml = Document.new
       xml.root = Node.new("epp")
@@ -44,6 +44,16 @@ module Epp #:nodoc:
       return xml
     end
     
+    def change_password pass
+      @new_password = pass
+
+      open_connection
+      login
+      logout
+
+      @new_password = nil
+    end
+
     # Sends an XML request to the EPP server, and receives an XML response. 
     # <tt><login></tt> and <tt><logout></tt> requests are also wrapped
     # around the request, so we can close the socket immediately after
@@ -143,6 +153,7 @@ module Epp #:nodoc:
       
       login << Node.new("clID", tag)
       login << Node.new("pw", password)
+      login << Node.new("newPW", @new_password) if @new_password
       
       login << options = Node.new("options")
       
